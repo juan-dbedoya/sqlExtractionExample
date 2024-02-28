@@ -1,0 +1,139 @@
+//code to create a xml file
+package org.example;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.OutputStream;
+
+public class Main {
+    public static void main(String[] args) throws ParserConfigurationException, TransformerException {
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
+        //root elements
+        Document doc = docBuilder.newDocument();
+        Element rootElement = doc.createElement("formats");
+        doc.appendChild(rootElement);
+
+        Element format = doc.createElement("format");
+        rootElement.appendChild(format);
+        format.setAttribute("id","1");
+
+        Element date = doc.createElement("date_");
+        date.setTextContent("26/01/2023");
+        format.appendChild(date);
+
+        Element amount = doc.createElement("amount");
+        amount.setTextContent("2360");
+        format.appendChild(amount);
+
+        Element person = doc.createElement("person");
+        format.appendChild(person);
+        person.setAttribute("id","2");
+
+        Element name = doc.createElement("name_");
+        name.setTextContent("juan pablo davila");
+        person.appendChild(name);
+
+        Element age = doc.createElement("age");
+        age.setTextContent("23");
+        person.appendChild(age);
+
+        writeXml(doc, System.out);
+
+    }
+
+    private static  void  writeXml(Document document, OutputStream outputStream) throws TransformerException {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+
+
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        DOMSource source = new DOMSource(document);
+        StreamResult result = new StreamResult(outputStream);
+
+        transformer.transform(source, result);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------
+//code to extract data of a database
+package org.example;
+
+import java.sql.*;
+
+import java.util.Properties;
+
+public class Main {
+    public static void main(String[] args) {
+        try (
+            //construir la coneccion a la base datos
+            Connection conn = DriverManager.getConnection(
+            "jdbc:mysql://localhost:3306/xmlExample",
+            "root","root");
+
+            Statement stmt = conn.createStatement();
+        ){
+            //Write a SQL query string
+            String strSelect = "SELECT * FROM xmlExample.format_dol inner join person on person.id_person = format_dol.id_person";
+            System.out.println("The query is: "+strSelect);
+
+            ResultSet resultSet = stmt.executeQuery(strSelect);
+
+            System.out.println("The infromation obtained is: ");
+
+            int rowCount = 0;
+
+            while (resultSet.next()) {
+                String idFormat = resultSet.getString("id_format");
+                String date = resultSet.getString("date_");
+            }
+
+            System.out.println("Total of records = "+rowCount);
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------
+//Sql code to create the database
+create database xmlExample;
+
+use xmlExample;
+
+create table person(
+	id_person int(10),
+    name_ varchar(20),
+    age int(10),
+	primary key (id_person)
+)engine = InnoDB;
+
+create table format_dol (
+	id_format int(10),
+    date_ varchar(20),
+    amoun int(20),
+    id_person int(10),
+    primary key(id_format),
+    constraint foreign key(id_person) references person(id_person) on delete cascade on update cascade
+)engine = InnoDB;
+
+insert into xmlExample.person (id_person, name_, age) values (1, "juan pablo davila", 23);
+insert into xmlExample.person (id_person, name_, age) values (2, "paola bedoya echavarria", 39);
+insert into xmlExample.person (id_person, name_, age) values (3, "lorena sanchez henao", 24);
+
+insert into xmlExample.format_dol (id_format, date_, amoun, id_person) values (4, "26/01/2023", 2360, 1);
+insert into xmlExample.format_dol (id_format, date_, amoun, id_person) values (5, "21/08/2022", 21770, 2);
+insert into xmlExample.format_dol (id_format, date_, amoun, id_person) values (6, "11/07/2021", 1206, 3);
